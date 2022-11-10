@@ -1,13 +1,17 @@
 package com.shop.repository;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.shop.constant.ItemSellStatus;
 import com.shop.entity.Item;
+import com.shop.entity.QItem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,6 +23,9 @@ class ItemRepositoryTest {
 
     @Autowired
     ItemRepository itemRepository;
+
+    @PersistenceContext
+    EntityManager em;
 
     public void createItemList() {
         for (int i=1; i<=10; i++) {
@@ -56,6 +63,22 @@ class ItemRepositoryTest {
     public void findByItemNmTest() {
         this.createItemList();
         List<Item> itemList = itemRepository.findByItemNm("테스트 상품1");
+        for (Item item : itemList) {
+            System.out.println(item.toString());
+        }
+    }
+
+    @Test
+    @DisplayName("Querydsl 조회 테스트1")
+    public void queryDslTest() {
+        this.createItemList();
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+        QItem qItem = QItem.item;
+        List<Item> itemList = jpaQueryFactory.selectFrom(qItem)
+                .where(qItem.itemSellStatus.eq(ItemSellStatus.SELL))
+                .where(qItem.itemDetail.like("%" + "테스트 상품 상세 설명" + "%"))
+                .orderBy(qItem.price.desc()).fetch();
+
         for (Item item : itemList) {
             System.out.println(item.toString());
         }
