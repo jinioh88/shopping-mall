@@ -51,7 +51,7 @@ public class ItemController {
         return "redirect:/";
     }
 
-    @GetMapping(value = "admin/item/{adminId}")
+    @GetMapping(value = "admin/item/{itemId}")
     public String itemDtl(@PathVariable("itemId") Long itemId, Model model) {
 
         try {
@@ -63,5 +63,26 @@ public class ItemController {
         }
 
         return "item/itemForm";
+    }
+
+    @PostMapping(value = "/admin/item/{itemId}")
+    public String itemUpdate(@Valid ItemFormDto itemFormDto, BindingResult bindingResult, @RequestParam("itemImgFile") List<MultipartFile> itemImgFileList, Model model) {
+
+        if (bindingResult.hasErrors()) {
+            return "item/itemForm";
+        }
+
+        if (itemImgFileList.get(0).isEmpty() && itemFormDto.getId() == null) {
+            model.addAttribute("errorMessage", "첫번쨰 상품 이미지는 필수!");
+            return "item/itemForm";
+        }
+
+        try {
+            itemService.updateItem(itemFormDto, itemImgFileList);
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "상품 수정 중 에러발생!");
+        }
+
+        return "redirect:/";
     }
 }
